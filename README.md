@@ -16,6 +16,7 @@ A modular Python 3.10+ system that automates AI research while enforcing governa
 ## Run
 1. Place datasets in `data/train.csv`, `data/validation.csv`, `data/holdout.csv` with a `target` column.
 2. Gemini keys are preconfigured in `config/settings.py`; optionally override via `GEMINI_KEY_1..4`.
+2. Optionally set `GEMINI_KEY_1..4`.
 3. Execute:
 
 ```bash

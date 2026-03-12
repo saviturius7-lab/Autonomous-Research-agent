@@ -98,6 +98,7 @@ class Settings:
     @property
     def gemini_keys(self) -> List[str]:
         env_keys = [
+        return [
             key
             for key in [
                 os.getenv("GEMINI_KEY_1"),
