@@ -8,6 +8,14 @@ from pathlib import Path
 from typing import List
 
 
+DEFAULT_GEMINI_KEYS = [
+    "AIzaSyAgyLOp3O2KJSDuBzTHIcO3P6u0JnYOy9Y",
+    "AIzaSyAZLw-MJuq_FVcAPB-VWeGzF5AMoUQ_S8s",
+    "AIzaSyCCi9hVrs_Bd7yHgid962SfpxTpLzvEkjs",
+    "AIzaSyBOgiTqWdtu5iMww1a_i5R8x8N1YdC4GQ8",
+]
+
+
 @dataclass
 class BudgetLimits:
     """Operational budget constraints that governance enforces."""
@@ -89,6 +97,7 @@ class Settings:
 
     @property
     def gemini_keys(self) -> List[str]:
+        env_keys = [
         return [
             key
             for key in [
@@ -99,6 +108,7 @@ class Settings:
             ]
             if key
         ]
+        return env_keys or DEFAULT_GEMINI_KEYS
 
 
 def load_settings() -> Settings:
