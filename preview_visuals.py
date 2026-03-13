@@ -1,15 +1,8 @@
-"""Visualization helpers for leaderboard and feature insights."""
-
-from __future__ import annotations
-
-from pathlib import Path
-from typing import Dict
+"""Preview the evening pink theme visualizations."""
 
 import matplotlib.pyplot as plt
 import numpy as np
-
-from ai_scientist_system.memory.leaderboard import Leaderboard
-
+from pathlib import Path
 
 EVENING_PINK_THEME = {
     "background": "#2a1a2e",
@@ -21,12 +14,10 @@ EVENING_PINK_THEME = {
     "text_primary": "#ffffff",
     "text_secondary": "#dfe6e9",
     "grid": "#574b60",
-    "gradient_start": "#e84393",
-    "gradient_end": "#fd79a8",
 }
 
 
-def configure_evening_pink_style() -> None:
+def configure_evening_pink_style():
     plt.rcParams.update({
         "figure.facecolor": EVENING_PINK_THEME["background"],
         "axes.facecolor": EVENING_PINK_THEME["surface"],
@@ -43,32 +34,27 @@ def configure_evening_pink_style() -> None:
     })
 
 
-def save_leaderboard_plot(leaderboard: Leaderboard, output_path: Path, top_k: int = 10) -> Path:
+def create_sample_leaderboard():
     configure_evening_pink_style()
 
-    entries = leaderboard.top(top_k)
-    labels = [e.experiment_id for e in entries]
-    values = [e.metric for e in entries]
-
-    if not labels:
-        labels = ["none"]
-        values = [0.0]
+    experiments = [f"exp_{i:06d}" for i in range(1, 11)]
+    scores = np.array([0.892, 0.885, 0.878, 0.871, 0.865, 0.859, 0.852, 0.846, 0.839, 0.832])
 
     fig, ax = plt.subplots(figsize=(14, 7))
 
-    x_positions = np.arange(len(labels))
-    colors = plt.cm.RdPu_r(np.linspace(0.3, 0.8, len(labels)))
+    x_positions = np.arange(len(experiments))
+    colors = plt.cm.RdPu_r(np.linspace(0.3, 0.8, len(experiments)))
 
     bars = ax.bar(
         x_positions,
-        values,
+        scores,
         color=colors,
         edgecolor=EVENING_PINK_THEME["primary"],
         linewidth=1.5,
         alpha=0.9,
     )
 
-    for i, (bar, value) in enumerate(zip(bars, values)):
+    for bar, value in zip(bars, scores):
         height = bar.get_height()
         ax.text(
             bar.get_x() + bar.get_width() / 2.0,
@@ -81,10 +67,10 @@ def save_leaderboard_plot(leaderboard: Leaderboard, output_path: Path, top_k: in
             fontweight="bold",
         )
 
-    ax.set_xlabel("Experiment ID", fontsize=12, fontweight="bold", color=EVENING_PINK_THEME["text_primary"])
-    ax.set_ylabel(leaderboard.metric_name.upper(), fontsize=12, fontweight="bold", color=EVENING_PINK_THEME["text_primary"])
+    ax.set_xlabel("Experiment ID", fontsize=12, fontweight="bold")
+    ax.set_ylabel("F1 SCORE", fontsize=12, fontweight="bold")
     ax.set_title(
-        f"Top {top_k} Experiments by {leaderboard.metric_name.upper()}",
+        "Top 10 Experiments by F1 Score",
         fontsize=16,
         fontweight="bold",
         color=EVENING_PINK_THEME["primary"],
@@ -92,40 +78,36 @@ def save_leaderboard_plot(leaderboard: Leaderboard, output_path: Path, top_k: in
     )
 
     ax.set_xticks(x_positions)
-    ax.set_xticklabels(labels, rotation=45, ha="right", fontsize=9)
+    ax.set_xticklabels(experiments, rotation=45, ha="right", fontsize=9)
     ax.grid(True, axis="y", alpha=0.3, linestyle="--", linewidth=0.7)
     ax.set_axisbelow(True)
 
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
-    ax.spines["left"].set_color(EVENING_PINK_THEME["grid"])
-    ax.spines["bottom"].set_color(EVENING_PINK_THEME["grid"])
 
     plt.tight_layout()
 
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_path, dpi=300, bbox_inches="tight", facecolor=EVENING_PINK_THEME["background"])
+    output_dir = Path("artifacts/preview")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    plt.savefig(
+        output_dir / "sample_leaderboard.png",
+        dpi=300,
+        bbox_inches="tight",
+        facecolor=EVENING_PINK_THEME["background"],
+    )
+    print(f"Saved: {output_dir / 'sample_leaderboard.png'}")
     plt.close()
-    return output_path
 
 
-def save_metrics_comparison_plot(
-    leaderboard: Leaderboard,
-    output_path: Path,
-    top_k: int = 5,
-) -> Path:
+def create_sample_metrics():
     configure_evening_pink_style()
 
-    entries = leaderboard.top(top_k)
-    if not entries:
-        return output_path
-
-    experiment_ids = [e.experiment_id for e in entries]
+    experiments = [f"exp_{i:06d}" for i in range(1, 6)]
     metrics_names = ["accuracy", "precision", "recall", "f1"]
 
     fig, ax = plt.subplots(figsize=(12, 8))
 
-    x_positions = np.arange(len(experiment_ids))
+    x_positions = np.arange(len(experiments))
     bar_width = 0.2
 
     colors = [
@@ -135,8 +117,9 @@ def save_metrics_comparison_plot(
         EVENING_PINK_THEME["accent"],
     ]
 
+    np.random.seed(42)
     for i, metric_name in enumerate(metrics_names):
-        values = [e.metrics.get(metric_name, 0.0) for e in entries]
+        values = 0.75 + np.random.rand(len(experiments)) * 0.15
         offset = (i - len(metrics_names) / 2) * bar_width + bar_width / 2
         ax.bar(
             x_positions + offset,
@@ -152,7 +135,7 @@ def save_metrics_comparison_plot(
     ax.set_xlabel("Experiment ID", fontsize=12, fontweight="bold")
     ax.set_ylabel("Score", fontsize=12, fontweight="bold")
     ax.set_title(
-        f"Metrics Comparison - Top {top_k} Experiments",
+        "Metrics Comparison - Top 5 Experiments",
         fontsize=16,
         fontweight="bold",
         color=EVENING_PINK_THEME["primary"],
@@ -160,7 +143,7 @@ def save_metrics_comparison_plot(
     )
 
     ax.set_xticks(x_positions)
-    ax.set_xticklabels(experiment_ids, rotation=45, ha="right", fontsize=9)
+    ax.set_xticklabels(experiments, rotation=45, ha="right", fontsize=9)
     ax.legend(
         loc="upper right",
         framealpha=0.9,
@@ -175,25 +158,23 @@ def save_metrics_comparison_plot(
 
     plt.tight_layout()
 
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_path, dpi=300, bbox_inches="tight", facecolor=EVENING_PINK_THEME["background"])
+    output_dir = Path("artifacts/preview")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    plt.savefig(
+        output_dir / "sample_metrics.png",
+        dpi=300,
+        bbox_inches="tight",
+        facecolor=EVENING_PINK_THEME["background"],
+    )
+    print(f"Saved: {output_dir / 'sample_metrics.png'}")
     plt.close()
-    return output_path
 
 
-def save_feature_importance_plot(
-    feature_importance: Dict[str, float],
-    output_path: Path,
-    top_k: int = 15,
-) -> Path:
+def create_sample_features():
     configure_evening_pink_style()
 
-    if not feature_importance:
-        return output_path
-
-    sorted_features = sorted(feature_importance.items(), key=lambda x: x[1], reverse=True)[:top_k]
-    features = [f[0] for f in sorted_features]
-    importances = [f[1] for f in sorted_features]
+    features = [f"feature_{i}" for i in range(15)]
+    importances = np.sort(np.random.rand(15) * 0.3 + 0.05)[::-1]
 
     fig, ax = plt.subplots(figsize=(10, 8))
 
@@ -209,7 +190,7 @@ def save_feature_importance_plot(
         alpha=0.9,
     )
 
-    for i, (bar, value) in enumerate(zip(bars, importances)):
+    for bar, value in zip(bars, importances):
         width = bar.get_width()
         ax.text(
             width + 0.005,
@@ -226,7 +207,7 @@ def save_feature_importance_plot(
     ax.set_yticklabels(features, fontsize=9)
     ax.set_xlabel("Importance", fontsize=12, fontweight="bold")
     ax.set_title(
-        f"Top {top_k} Feature Importances",
+        "Top 15 Feature Importances",
         fontsize=16,
         fontweight="bold",
         color=EVENING_PINK_THEME["primary"],
@@ -241,7 +222,22 @@ def save_feature_importance_plot(
 
     plt.tight_layout()
 
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_path, dpi=300, bbox_inches="tight", facecolor=EVENING_PINK_THEME["background"])
+    output_dir = Path("artifacts/preview")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    plt.savefig(
+        output_dir / "sample_features.png",
+        dpi=300,
+        bbox_inches="tight",
+        facecolor=EVENING_PINK_THEME["background"],
+    )
+    print(f"Saved: {output_dir / 'sample_features.png'}")
     plt.close()
-    return output_path
+
+
+if __name__ == "__main__":
+    print("Generating evening pink theme visualization previews...")
+    create_sample_leaderboard()
+    create_sample_metrics()
+    create_sample_features()
+    print("\nAll previews generated successfully!")
+    print("Check artifacts/preview/ directory")

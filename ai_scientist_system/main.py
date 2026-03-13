@@ -23,8 +23,13 @@ from ai_scientist_system.core.governance import ExperimentGovernance, Governance
 from ai_scientist_system.memory.leaderboard import Leaderboard
 from ai_scientist_system.memory.research_graph import ResearchGraph
 from ai_scientist_system.memory.research_memory import ResearchMemory
+from ai_scientist_system.reports.dashboard_generator import generate_dashboard_html
 from ai_scientist_system.reports.report_generator import ReportGenerator
-from ai_scientist_system.reports.visualization import save_leaderboard_plot
+from ai_scientist_system.reports.visualization import (
+    save_feature_importance_plot,
+    save_leaderboard_plot,
+    save_metrics_comparison_plot,
+)
 from ai_scientist_system.statistics.hypothesis_validator import StatisticalValidator
 from ai_scientist_system.utils.logging_utils import configure_logging
 from ai_scientist_system.utils.reproducibility_utils import attach_reproducibility_metadata
@@ -127,6 +132,32 @@ def run(goal: str = "discover predictive signals in dataset") -> None:
         save_leaderboard_plot(
             leaderboard,
             settings.runtime.report_dir / f"leaderboard_{iteration:04d}.png",
+        )
+
+        if len(leaderboard.entries) > 0:
+            save_metrics_comparison_plot(
+                leaderboard,
+                settings.runtime.report_dir / f"metrics_comparison_{iteration:04d}.png",
+            )
+
+            top_entry = leaderboard.top(1)[0]
+            if top_entry.experiment_id in [e.experiment["experiment_id"] for e in memory.entries]:
+                matching_entry = next(
+                    e for e in memory.entries
+                    if e.experiment["experiment_id"] == top_entry.experiment_id
+                )
+                save_feature_importance_plot(
+                    matching_entry.result["feature_importance"],
+                    settings.runtime.report_dir / f"feature_importance_{iteration:04d}.png",
+                )
+
+        generate_dashboard_html(
+            iteration=iteration,
+            memory=memory,
+            leaderboard=leaderboard,
+            patterns=patterns,
+            budget_snapshot=governance.budget_snapshot(),
+            report_dir=settings.runtime.report_dir,
         )
 
         checkpoint.save(
